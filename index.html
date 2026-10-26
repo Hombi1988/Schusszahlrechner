@@ -1,0 +1,421 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Schusszahlrechner By René Homberger</title>
+<meta name="theme-color" content="#c4561a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Schusszahl">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+/* Layout: eine Spalte, App-Kopf oben, Tab-Leiste unten fixiert; Inhalte als ruhige Listen mit Zählwerk-Ziffern */
+:root{
+  --bg:#eef0ec; --surface:#ffffff; --line:#d5d9d1; --fg:#1b1f1a; --muted:#5f665c;
+  --accent:#c4561a; --accent-fg:#ffffff;
+  --ok:#2f7d4a; --warn:#b7791f; --crit:#b42318; --track:#dfe3db;
+  --f-display:"Arial Narrow","Roboto Condensed",system-ui,-apple-system,sans-serif;
+  --f-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --f-num:ui-monospace,"SF Mono","Roboto Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141713; --surface:#1d211c; --line:#30362e; --fg:#e7eae3; --muted:#9aa395;
+  --accent:#e8763a; --accent-fg:#141713;
+  --ok:#5cb87a; --warn:#e0a748; --crit:#f0685c; --track:#2c322a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141713; --surface:#1d211c; --line:#30362e; --fg:#e7eae3; --muted:#9aa395;
+  --accent:#e8763a; --accent-fg:#141713;
+  --ok:#5cb87a; --warn:#e0a748; --crit:#f0685c; --track:#2c322a; color-scheme:dark}
+
+*{box-sizing:border-box}
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px)}
+html,body{min-height:100%;margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px calc(96px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+header.app{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-top:6px}
+h1{font-family:var(--f-display);font-weight:700;font-size:1.7rem;letter-spacing:.01em;margin:0;text-transform:uppercase}
+h2{font-family:var(--f-display);font-weight:700;font-size:1.15rem;letter-spacing:.04em;text-transform:uppercase;margin:0;color:var(--muted)}
+.store{font-size:.78rem;color:var(--muted)}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+.lbl{font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* System-Wahl */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1.5px solid var(--line);background:var(--surface);border-radius:999px;padding:8px 14px;font-weight:600;display:flex;gap:8px;align-items:center}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent);color:var(--accent-fg)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.dot.warn{background:var(--warn)} .dot.crit{background:var(--crit)}
+.chip[aria-pressed="true"] .dot{box-shadow:0 0 0 2px var(--accent-fg)}
+
+/* Eingabe-Panel */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.counter{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.counter .big{font-family:var(--f-num);font-weight:700;font-size:2.4rem;line-height:1;font-variant-numeric:tabular-nums}
+.counter .of{color:var(--muted);font-size:.9rem}
+.bar{height:10px;border-radius:5px;background:var(--track);overflow:hidden;position:relative}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:5px;transition:width .3s}
+.bar i.warn{background:var(--warn)} .bar i.crit{background:var(--crit)}
+.bar .mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--muted);opacity:.5}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row > *{min-width:0}
+.field{display:flex;flex-direction:column;gap:6px;flex:1 1 140px}
+input[type=number],input[type=text],input[type=date]{width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:12px;font-size:1.05rem}
+input.shots{font-family:var(--f-num);font-size:1.6rem;font-weight:700;padding:10px 12px}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.quick button{border:1.5px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 0;font-family:var(--f-num);font-weight:700}
+.btn{border:0;border-radius:12px;padding:14px 18px;font-weight:700;font-size:1.05rem;background:var(--accent);color:var(--accent-fg)}
+.btn.ghost{background:transparent;color:var(--fg);border:1.5px solid var(--line)}
+.btn.danger{background:var(--crit);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.toast{font-size:.9rem;color:var(--ok);font-weight:600;min-height:1.3em}
+
+/* Verlauf */
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.list li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.list li:last-child{border-bottom:0}
+.list .d{color:var(--muted);flex:1}
+.list .n{font-family:var(--f-num);font-weight:700}
+.x{border:0;background:transparent;color:var(--muted);font-size:1.2rem;padding:4px 8px;border-radius:8px}
+.x.armed{background:var(--crit);color:#fff;font-size:.8rem;font-weight:700}
+
+/* Statistik */
+.stat{display:flex;flex-direction:column;gap:10px;padding:16px;background:var(--surface);border:1px solid var(--line);border-radius:14px;border-left-width:5px}
+.stat.ok{border-left-color:var(--ok)} .stat.warn{border-left-color:var(--warn)} .stat.crit{border-left-color:var(--crit)}
+.stat .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.stat .name{font-family:var(--f-display);font-size:1.35rem;font-weight:700}
+.pill{font-size:.75rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px}
+.pill.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,transparent)}
+.pill.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 16%,transparent)}
+.pill.crit{color:var(--crit);background:color-mix(in srgb,var(--crit) 14%,transparent)}
+.remain{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.remain .big{font-family:var(--f-num);font-size:2rem;font-weight:700;line-height:1}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.kv div{display:flex;flex-direction:column;gap:2px}
+.kv b{font-family:var(--f-num);font-weight:700;font-size:1rem}
+
+/* Systeme verwalten */
+.sys{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line)}
+.sys:last-child{border-bottom:0}
+.sys .meta{flex:1;min-width:0}
+.sys .meta b{font-family:var(--f-display);font-size:1.15rem;display:block}
+.sys .meta span{color:var(--muted);font-size:.85rem}
+.empty{color:var(--muted);text-align:center;padding:24px 8px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.hint{font-size:.82rem;color:var(--muted)}
+.err{color:var(--crit);font-size:.88rem;font-weight:600;min-height:1.2em}
+
+/* Tab-Leiste */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:5}
+nav.tabs .in{display:grid;grid-template-columns:repeat(3,1fr);width:100%;max-width:560px}
+nav.tabs button{border:0;background:transparent;padding:12px 4px 14px;font-weight:600;font-size:.9rem;color:var(--muted);display:flex;flex-direction:column;align-items:center;gap:4px}
+nav.tabs button svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8}
+nav.tabs button[aria-current="page"]{color:var(--accent)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="app">
+    <div style="display:flex;flex-direction:column;gap:2px"><h1>Schusszahlrechner</h1><span class="store">By René Homberger</span></div>
+    <span class="store" id="store">Lädt …</span>
+  </header>
+  <main id="view"></main>
+</div>
+
+<nav class="tabs" aria-label="Ansichten"><div class="in">
+  <button data-tab="erfassen" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Erfassen</button>
+  <button data-tab="statistik"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Statistik</button>
+  <button data-tab="systeme"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Systeme</button>
+</div></nav>
+
+<script>
+(function(){
+const WARN_AT = 0.8; // ab 80 % des kritischen Bereichs: Warnstufe
+const LS_KEY = "schusszahl.v1";
+const nf = new Intl.NumberFormat("de-CH");
+const fmt = n => nf.format(Math.round(n));
+const today = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimezoneOffset()); return d.toISOString().slice(0,10); };
+const fdate = s => { const [y,m,d]=s.split("-"); return `${d}.${m}.${y}`; };
+const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+let systems = [];      // [{id,nr,name,crit,start,entries:[{id,d,n}]}]
+let mode = "local";
+let col = null;
+let tab = "erfassen";
+let selId = null;
+try { selId = localStorage.getItem(LS_KEY+".sel"); } catch(e){}
+let editId = null;     // System in Bearbeitung (null = neu, undefined = kein Formular)
+editId = undefined;
+let armed = null;      // Löschbestätigung
+let toast = "";
+
+/* ---------- Speicher ---------- */
+function loadLocal(){ try{ const v=JSON.parse(localStorage.getItem(LS_KEY)||"[]"); return Array.isArray(v)?v:[]; }catch(e){ return []; } }
+function saveLocal(){ try{ localStorage.setItem(LS_KEY,JSON.stringify(systems)); }catch(e){} }
+async function putSystem(s){
+  const i = systems.findIndex(x=>x.id===s.id);
+  if(i>=0) systems[i]=s; else systems.push(s);
+  render();
+  if(mode==="db"){ await col.doc(s.id).set(s); } else saveLocal();
+}
+async function removeSystem(id){
+  systems = systems.filter(x=>x.id!==id);
+  render();
+  if(mode==="db"){ await col.doc(id).delete(); } else saveLocal();
+}
+function setStore(){
+  document.getElementById("store").textContent =
+    "Auf diesem Handy gespeichert";
+}
+
+/* ---------- Berechnung ---------- */
+function calc(s){
+  const fired = (s.entries||[]).reduce((a,e)=>a+(+e.n||0),0);
+  const total = (+s.start||0) + fired;
+  const crit = +s.crit||0;
+  const remaining = Math.max(0, crit-total);
+  const pct = crit>0 ? total/crit : 0;
+  const level = pct>=1 ? "crit" : pct>=WARN_AT ? "warn" : "ok";
+  const n = (s.entries||[]).length;
+  const avg = n ? fired/n : 0;
+  const sorted = [...(s.entries||[])].sort((a,b)=>b.d.localeCompare(a.d)||(b.id>a.id?1:-1));
+  const last = sorted[0]?.d;
+  const estLeft = avg>0 && remaining>0 ? Math.ceil(remaining/avg) : null;
+  return {fired,total,crit,remaining,pct,level,n,avg,last,sorted,estLeft,over:Math.max(0,total-crit)};
+}
+const LEVEL_TXT = {ok:"im grünen Bereich",warn:"bald kritisch",crit:"kritisch erreicht"};
+const sysLabel = s => s.name ? `${s.nr} · ${s.name}` : s.nr;
+const sortSys = arr => [...arr].sort((a,b)=>String(a.nr).localeCompare(String(b.nr),"de",{numeric:true}));
+
+/* ---------- Ansichten ---------- */
+function bar(c){
+  const w = Math.min(100, c.pct*100);
+  return `<div class="bar" role="img" aria-label="${Math.round(c.pct*100)} % des kritischen Bereichs"><span class="mark" style="left:${WARN_AT*100}%"></span><i class="${c.level}" style="width:${w}%"></i></div>`;
+}
+
+function viewErfassen(){
+  if(!systems.length) return emptySystems();
+  const list = sortSys(systems);
+  if(!list.find(s=>s.id===selId)) selId = list[0].id;
+  const s = list.find(x=>x.id===selId), c = calc(s);
+  return `
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <h2>System wählen</h2>
+    <div class="chips">${list.map(x=>{const cc=calc(x);return `<button class="chip" data-sel="${x.id}" aria-pressed="${x.id===selId}"><span class="dot ${cc.level}"></span>${esc(sysLabel(x))}</button>`}).join("")}</div>
+  </section>
+  <section class="panel">
+    <div class="counter">
+      <div style="display:flex;flex-direction:column;gap:4px"><span class="lbl">Gesamt</span><span class="big">${fmt(c.total)}</span></div>
+      <div class="of">kritisch ab <span class="num">${fmt(c.crit)}</span></div>
+    </div>
+    ${bar(c)}
+    <div class="hint">${c.level==="crit" ? `<b style="color:var(--crit)">Kritischer Bereich erreicht</b> (${fmt(c.over)} darüber)` : `Noch <b class="num">${fmt(c.remaining)}</b> Schuss bis zum kritischen Bereich`}</div>
+    <form id="addForm" style="display:flex;flex-direction:column;gap:12px" novalidate>
+      <div class="row">
+        <label class="field" style="flex:2 1 150px"><span class="lbl">Schüsse</span><input class="shots" id="shots" type="number" inputmode="numeric" min="1" step="1" placeholder="0"></label>
+        <label class="field"><span class="lbl">Datum</span><input id="date" type="date" value="${today()}"></label>
+      </div>
+      <div class="err" id="addErr"></div>
+      <button class="btn" type="submit">Eintragen</button>
+      <div class="toast" aria-live="polite">${esc(toast)}</div>
+    </form>
+  </section>
+  <section style="display:flex;flex-direction:column;gap:8px">
+    <h2>Letzte Einträge</h2>
+    ${c.sorted.length ? `<ul class="list">${c.sorted.slice(0,8).map(e=>`<li><span class="d">${fdate(e.d)}</span><span class="n">${fmt(e.n)}</span><button class="x ${armed==="e:"+e.id?"armed":""}" data-del-entry="${e.id}" aria-label="Eintrag löschen">${armed==="e:"+e.id?"Löschen?":"×"}</button></li>`).join("")}</ul>${c.sorted.length>8?`<div class="hint">${c.sorted.length-8} ältere Einträge – alle in der Statistik.</div>`:""}` : `<div class="hint">Noch keine Einträge für dieses System.</div>`}
+  </section>`;
+}
+
+function viewStatistik(){
+  if(!systems.length) return emptySystems();
+  const list = sortSys(systems).map(s=>({s,c:calc(s)})).sort((a,b)=>a.c.remaining-b.c.remaining);
+  return `<section style="display:flex;flex-direction:column;gap:12px">
+    <h2>Restschüsse bis kritisch</h2>
+    ${list.map(({s,c})=>`
+    <article class="stat ${c.level}">
+      <div class="top"><span class="name">${esc(sysLabel(s))}</span><span class="pill ${c.level}">${LEVEL_TXT[c.level]}</span></div>
+      <div class="remain">${c.level==="crit"
+        ? `<span class="big" style="color:var(--crit)">+${fmt(c.over)}</span><span class="hint">über dem kritischen Bereich</span>`
+        : `<span class="big">${fmt(c.remaining)}</span><span class="hint">Schuss noch bis ${fmt(c.crit)}</span>`}</div>
+      ${bar(c)}
+      <div class="kv">
+        <div><span class="lbl">Gesamt</span><b>${fmt(c.total)}</b></div>
+        <div><span class="lbl">Verbraucht</span><b>${Math.round(c.pct*100)} %</b></div>
+        <div><span class="lbl">Ø / Eintrag</span><b>${c.n?fmt(c.avg):"–"}</b></div>
+      </div>
+      <div class="hint">${c.n?`${c.n} Einträge · zuletzt ${fdate(c.last)}`:"Noch keine Einträge"}${c.estLeft?` · bei gleichem Schnitt noch ca. ${c.estLeft} Einträge`:""}${+s.start?` · Startstand ${fmt(s.start)}`:""}</div>
+      ${c.n?`<details><summary class="hint" style="cursor:pointer">Alle Einträge</summary><ul class="list">${c.sorted.map(e=>`<li><span class="d">${fdate(e.d)}</span><span class="n">${fmt(e.n)}</span></li>`).join("")}</ul></details>`:""}
+    </article>`).join("")}
+  </section>`;
+}
+
+function sysForm(){
+  const s = editId ? systems.find(x=>x.id===editId) : null;
+  return `<form class="panel" id="sysForm" novalidate>
+    <h2>${s?"System bearbeiten":"Neues System"}</h2>
+    <div class="row">
+      <label class="field"><span class="lbl">Systemnummer</span><input type="text" id="f-nr" value="${esc(s?.nr)}" placeholder="z. B. 4711" autocomplete="off"></label>
+      <label class="field"><span class="lbl">Bezeichnung (optional)</span><input type="text" id="f-name" value="${esc(s?.name)}" placeholder="z. B. Lauf 2" autocomplete="off"></label>
+    </div>
+    <div class="row">
+      <label class="field"><span class="lbl">Kritisch ab (Schuss)</span><input type="number" id="f-crit" inputmode="numeric" min="1" step="1" value="${s?.crit??""}" placeholder="z. B. 5000"></label>
+      <label class="field"><span class="lbl">Startstand (bisher)</span><input type="number" id="f-start" inputmode="numeric" min="0" step="1" value="${s?.start??0}"></label>
+    </div>
+    <div class="hint">Startstand: Schüsse, die das System schon hatte, bevor du hier erfasst.</div>
+    <div class="err" id="sysErr"></div>
+    <div class="row"><button class="btn" type="submit" style="flex:1">${s?"Speichern":"System anlegen"}</button><button class="btn ghost" type="button" data-cancel>Abbrechen</button></div>
+  </form>`;
+}
+
+function viewSysteme(){
+  const list = sortSys(systems);
+  return `<section style="display:flex;flex-direction:column;gap:14px">
+    ${editId!==undefined ? sysForm() : `<button class="btn" data-new>+ System erfassen</button>`}
+    ${list.length ? `<div class="panel" style="gap:0;padding-block:4px">${list.map(s=>{const c=calc(s);return `
+      <div class="sys"><span class="dot ${c.level}"></span>
+        <div class="meta"><b>${esc(sysLabel(s))}</b><span>kritisch ab <span class="num">${fmt(c.crit)}</span> · aktuell <span class="num">${fmt(c.total)}</span></span></div>
+        <button class="x" data-edit="${s.id}" aria-label="Bearbeiten">✎</button>
+        <button class="x ${armed==="s:"+s.id?"armed":""}" data-del-sys="${s.id}" aria-label="System löschen">${armed==="s:"+s.id?"Löschen?":"×"}</button>
+      </div>`}).join("")}</div>` : (editId===undefined?`<div class="empty">Noch keine Systeme erfasst.</div>`:"")}
+    <section class="panel">
+      <h2>Datensicherung</h2>
+      <div class="hint">Die Daten liegen nur auf diesem Handy. Mach ab und zu eine Sicherung, z. B. vor einem Handywechsel. Beim Einlesen werden Systeme mit gleicher Nummer durch die Sicherung ersetzt.</div>
+      <div class="row"><button class="btn ghost" data-export style="flex:1">Sicherung speichern</button><button class="btn ghost" data-import style="flex:1">Sicherung einlesen</button></div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+      <div class="toast" id="bkMsg" aria-live="polite"></div>
+    </section>
+  </section>`;
+}
+
+function emptySystems(){
+  return `<div class="empty panel">
+    <b style="color:var(--fg);font-size:1.1rem">Noch kein System erfasst</b>
+    <span>Lege zuerst eine Systemnummer und den kritischen Bereich an. Danach kannst du hier Schüsse eintragen.</span>
+    <button class="btn" data-goto-new>System erfassen</button></div>`;
+}
+
+function render(){
+  setStore();
+  const v = document.getElementById("view");
+  const focusId = document.activeElement?.id;
+  if(mode==="loading"){ v.innerHTML = `<div class="empty">Daten werden geladen …</div>`; return; }
+  v.innerHTML = tab==="erfassen" ? viewErfassen() : tab==="statistik" ? viewStatistik() : viewSysteme();
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-current", b.dataset.tab===tab?"page":"false"));
+  if(focusId){ const el=document.getElementById(focusId); if(el && el.tagName==="INPUT") el.focus(); }
+}
+
+/* ---------- Interaktion ---------- */
+document.addEventListener("click", async e=>{
+  const t = e.target.closest("button"); if(!t) return;
+  if(t.dataset.tab){ tab=t.dataset.tab; armed=null; toast=""; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.sel){ selId=t.dataset.sel; try{localStorage.setItem(LS_KEY+".sel",selId)}catch(_){} armed=null; toast=""; render(); return; }
+  if(t.hasAttribute("data-export")){ exportData(); return; }
+  if(t.hasAttribute("data-import")){ document.getElementById("importFile").click(); return; }
+  if(t.hasAttribute("data-new")){ editId=null; render(); document.getElementById("f-nr")?.focus(); return; }
+  if(t.hasAttribute("data-goto-new")){ tab="systeme"; editId=null; render(); document.getElementById("f-nr")?.focus(); return; }
+  if(t.hasAttribute("data-cancel")){ editId=undefined; render(); return; }
+  if(t.dataset.edit){ editId=t.dataset.edit; armed=null; render(); window.scrollTo(0,0); return; }
+  if(t.dataset.delSys){
+    const k="s:"+t.dataset.delSys;
+    if(armed!==k){ armed=k; render(); return; }
+    armed=null; if(editId===t.dataset.delSys) editId=undefined;
+    try{ await removeSystem(t.dataset.delSys); }catch(err){ alertErr(); }
+    return;
+  }
+  if(t.dataset.delEntry){
+    const k="e:"+t.dataset.delEntry;
+    if(armed!==k){ armed=k; render(); return; }
+    armed=null;
+    const s = systems.find(x=>x.id===selId); if(!s) return;
+    const ns = {...s, entries:(s.entries||[]).filter(x=>x.id!==t.dataset.delEntry)};
+    toast="Eintrag gelöscht.";
+    try{ await putSystem(ns); }catch(err){ alertErr(); }
+    return;
+  }
+});
+
+document.addEventListener("submit", async e=>{
+  e.preventDefault();
+  if(e.target.id==="addForm"){
+    const n = Math.round(+document.getElementById("shots").value);
+    const d = document.getElementById("date").value || today();
+    const errEl = document.getElementById("addErr");
+    if(!(n>0)){ errEl.textContent="Bitte eine Schusszahl grösser als 0 eingeben."; return; }
+    const s = systems.find(x=>x.id===selId); if(!s) return;
+    const ns = {...s, entries:[...(s.entries||[]), {id:uid(), d, n}]};
+    const before = calc(s).level, after = calc(ns);
+    toast = `${fmt(n)} Schuss auf ${sysLabel(s)} eingetragen.` + (after.level!==before && after.level!=="ok" ? ` Achtung: ${LEVEL_TXT[after.level]}.` : "");
+    armed=null;
+    try{ await putSystem(ns); }catch(err){ alertErr(); }
+  }
+  if(e.target.id==="sysForm"){
+    const nr = document.getElementById("f-nr").value.trim();
+    const name = document.getElementById("f-name").value.trim();
+    const crit = Math.round(+document.getElementById("f-crit").value);
+    const start = Math.max(0, Math.round(+document.getElementById("f-start").value||0));
+    const errEl = document.getElementById("sysErr");
+    if(!nr){ errEl.textContent="Bitte eine Systemnummer eingeben."; return; }
+    if(!(crit>0)){ errEl.textContent="Bitte den kritischen Bereich als Schusszahl eingeben."; return; }
+    if(systems.some(x=>x.nr===nr && x.id!==editId)){ errEl.textContent="Diese Systemnummer gibt es schon."; return; }
+    const old = editId ? systems.find(x=>x.id===editId) : null;
+    const s = old ? {...old,nr,name,crit,start} : {id:uid(),nr,name,crit,start,entries:[]};
+    editId = undefined;
+    if(!old){ selId = s.id; try{localStorage.setItem(LS_KEY+".sel",selId)}catch(_){} }
+    try{ await putSystem(s); }catch(err){ alertErr(); }
+  }
+});
+
+async function exportData(){
+  const name = `schusszahl-sicherung-${today()}.json`;
+  const blob = new Blob([JSON.stringify({app:"schusszahlrechner",v:1,exported:new Date().toISOString(),systems},null,2)],{type:"application/json"});
+  const msg = document.getElementById("bkMsg");
+  try{
+    const file = new File([blob],name,{type:"application/json"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:name}); msg.textContent="Sicherung weitergegeben."; return; }
+  }catch(e){ if(e && e.name==="AbortError") return; }
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
+  setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
+  msg.textContent="Sicherung gespeichert: "+name;
+}
+document.addEventListener("change", async e=>{
+  if(e.target.id!=="importFile") return;
+  const f=e.target.files[0]; if(!f) return;
+  const msg=document.getElementById("bkMsg");
+  try{
+    const data=JSON.parse(await f.text());
+    const list=Array.isArray(data)?data:data.systems;
+    if(!Array.isArray(list)) throw 0;
+    let n=0;
+    for(const x of list){
+      if(!x || !x.nr || !(+x.crit>0)) continue;
+      const clean={id:String(x.id||uid()),nr:String(x.nr),name:String(x.name||""),crit:+x.crit,start:+x.start||0,
+        entries:(Array.isArray(x.entries)?x.entries:[]).filter(en=>en&&/^\d{4}-\d{2}-\d{2}$/.test(en.d)&&+en.n>0).map(en=>({id:String(en.id||uid()),d:en.d,n:Math.round(+en.n)}))};
+      systems=systems.filter(y=>y.nr!==clean.nr && y.id!==clean.id); systems.push(clean); n++;
+    }
+    saveLocal(); render();
+    document.getElementById("bkMsg").style.color=""; document.getElementById("bkMsg").textContent=`${n} System${n===1?"":"e"} eingelesen.`;
+  }catch(err){ msg.textContent=""; const m=document.getElementById("bkMsg"); m.style.color="var(--crit)"; m.textContent="Die Datei ist keine gültige Sicherung dieser App."; }
+  e.target.value="";
+});
+
+function alertErr(){ toast=""; const v=document.getElementById("view"); const d=document.createElement("div"); d.className="err"; d.textContent="Speichern hat nicht geklappt. Prüfe die Verbindung und versuche es nochmals."; v.prepend(d); }
+
+/* ---------- Start ---------- */
+systems = loadLocal();
+render();
+try{ navigator.storage && navigator.storage.persist && navigator.storage.persist(); }catch(e){}
+if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{})); }
+})();
+</script>
+</body>
+</html>
