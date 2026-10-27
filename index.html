@@ -39,13 +39,19 @@ html,body{min-height:100%;margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--band)}
 .wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px calc(96px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
-header.app{background:var(--band);color:var(--band-fg);border-bottom:4px solid var(--accent);position:relative;overflow:hidden}
+header.app{background:var(--band);color:var(--band-fg);border-bottom:4px solid var(--accent);position:relative;overflow:visible;z-index:4}
+header.app .ringwrap{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 header.app .in{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 16px;display:flex;align-items:center;gap:14px;position:relative}
 header.app .mark{width:46px;height:46px;flex:none;border-radius:12px;background:var(--accent);display:grid;place-items:center}
 header.app .mark svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:1.8}
 header.app .mark svg .c{fill:#fff;stroke:none}
 header.app .t{display:flex;flex-direction:column;gap:2px;min-width:0}
 header.app .by{font-size:.78rem;color:var(--band-muted);letter-spacing:.04em}
+header.app .lang{margin-left:auto;position:relative;z-index:2;align-self:flex-start}
+header.app .lang > button{border:1.5px solid color-mix(in srgb,var(--band-fg) 35%,transparent);background:transparent;color:var(--band-fg);border-radius:8px;padding:5px 9px;font-weight:700;font-size:.8rem;letter-spacing:.06em}
+#langMenu{position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px;display:flex;flex-direction:column;gap:2px;box-shadow:0 8px 24px rgba(0,0,0,.25);min-width:72px}
+#langMenu button{border:0;background:transparent;color:var(--fg);padding:9px 12px;border-radius:8px;font-weight:700;font-size:.9rem;text-align:left}
+#langMenu button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg)}
 header.app .rings{position:absolute;right:-60px;top:50%;width:220px;height:220px;transform:translateY(-50%);opacity:.09;pointer-events:none}
 header.app .rings circle{fill:none;stroke:var(--band-fg);stroke-width:2}
 h1{font-family:var(--f-display);font-weight:700;font-size:clamp(1.15rem,5.4vw,1.6rem);letter-spacing:.01em;margin:0;text-transform:uppercase;line-height:1.05}
@@ -176,10 +182,11 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 <body>
 
 <header class="app">
-  <svg class="rings" viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="105"/><circle cx="110" cy="110" r="80"/><circle cx="110" cy="110" r="55"/><circle cx="110" cy="110" r="30"/></svg>
+  <div class="ringwrap"><svg class="rings" viewBox="0 0 220 220" aria-hidden="true"><circle cx="110" cy="110" r="105"/><circle cx="110" cy="110" r="80"/><circle cx="110" cy="110" r="55"/><circle cx="110" cy="110" r="30"/></svg></div>
   <div class="in">
     <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle class="c" cx="12" cy="12" r="1.6"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/></svg></span>
-    <div class="t"><h1>Schusszahlrechner</h1><span class="by">By René Homberger</span></div>
+    <div class="t"><h1 id="hTitle">Schusszahlrechner</h1><span class="by">By René Homberger</span></div>
+    <div class="lang"><button id="langBtn" aria-haspopup="true" aria-expanded="false">DE</button><div id="langMenu" hidden></div></div>
   </div>
 </header>
 <div class="wrap">
@@ -187,9 +194,9 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 </div>
 
 <nav class="tabs" aria-label="Ansichten"><div class="in">
-  <button data-tab="erfassen" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Erfassen</button>
-  <button data-tab="statistik"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Statistik</button>
-  <button data-tab="systeme"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Systeme</button>
+  <button data-tab="erfassen" aria-current="page"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg><span id="tErf">Erfassen</span></button>
+  <button data-tab="statistik"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span id="tStat">Statistik</span></button>
+  <button data-tab="systeme"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span id="tSys">Systeme</span></button>
 </div></nav>
 
 <script src="firebase.js" defer></script>
@@ -203,6 +210,197 @@ const today = () => { const d=new Date(); d.setMinutes(d.getMinutes()-d.getTimez
 const fdate = s => { const [y,m,d]=s.split("-"); return `${d}.${m}.${y}`; };
 const uid = () => Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const esc = s => String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+/* ---------- Sprachen ---------- */
+const LANGS = ["de","fr","it","en"];
+const I18N = {
+de:{
+ title:"Schusszahlrechner", tabErf:"Erfassen", tabStat:"Statistik", tabSys:"Systeme", langLbl:"Sprache",
+ lvOk:"im grünen Bereich", lvWarn:"bald kritisch", lvCrit:"kritisch erreicht",
+ newsHead:"Neu seit dem letzten Öffnen", newsLine:(by,n,sys,d,tot)=>`<b>${by}</b> hat ${n} Schuss auf <b>${sys}</b> eingetragen (${d}). Neuer Stand: <b class="num">${tot}</b>`,
+ shared:"Geteilt", sSync:"Geteilt · synchron", sOff:"Geteilt · offline", sWait:w=>`Geteilt · ${w} Änderung${w===1?"":"en"} warten auf Internet`,
+ pick:"System wählen", total:"Gesamt", kal:"Kal.", critFrom:"kritisch ab", critReached:"Kritischer Bereich erreicht", above:x=>`(${x} darüber)`,
+ left:x=>`Noch <b class="num">${x}</b> Schuss bis zum kritischen Bereich`, shots:"Schüsse", date:"Datum", enter:"Eintragen",
+ lastEntries:"Letzte Einträge", olderEntries:x=>`${x} ältere Einträge – alle in der Statistik.`, noEntriesSys:"Noch keine Einträge für dieses System.",
+ delEntry:"Eintrag löschen", delQ:"Löschen?",
+ statHead:"Restschüsse bis kritisch", overCrit:"über dem kritischen Bereich", shotsUntil:x=>`Schuss noch bis ${x}`,
+ used:"Verbraucht", avg:"Ø / Eintrag", nEntries:(n,d)=>`${n} Einträge · zuletzt ${d}`, noEntries:"Noch keine Einträge",
+ est:x=>` · bei gleichem Schnitt noch ca. ${x} Einträge`, startVal:x=>` · Startstand ${x}`, allEntries:"Alle Einträge",
+ editSys:"System bearbeiten", newSys:"Neues System", sysNr:"Systemnummer", kaliber:"Kaliber", label:"Bezeichnung (optional)", phLabel:"z. B. Lauf 2", phNr:"z. B. 4711", phKal:"z. B. .22 lr", phCrit:"z. B. 5000",
+ critAt:"Kritisch ab Schuss", start:"Startstand", startHint:"Startstand: Schüsse, die das System schon hatte, bevor du hier erfasst.",
+ save:"Speichern", create:"System anlegen", cancel:"Abbrechen",
+ yourName:"Dein Name (sehen die anderen)", phName:"z. B. René",
+ shareOff:"Teilen ist in dieser Version noch nicht eingerichtet.", shareWith:"Mit anderen teilen",
+ sharedHint:"Wer diesen Code in seiner App eingibt, trägt auf dasselbe System ein. Alle sehen die Schüsse der anderen.",
+ sendCode:"Code senden", copy:"Kopieren", unshareQ:"Wirklich trennen? Nochmals tippen", unshare:"Auf diesem Handy nicht mehr teilen",
+ unshareHint:"Trennen betrifft nur dieses Handy. Die Einträge bleiben hier erhalten, werden aber nicht mehr abgeglichen.",
+ shareHint:"Erstellt einen Code. Wer ihn in seiner App eingibt, trägt auf dasselbe System ein. Beim Öffnen der App siehst du, was die anderen eingetragen haben.",
+ makeCode:"Code erstellen", joinHead:"Geteiltes System hinzufügen",
+ joinHint:"Gib den Code ein, den du bekommen hast. Hast du dieses System schon mit gleicher Nummer erfasst, werden deine Einträge zusammengeführt.",
+ code:"Code", connect:"Verbinden", addSys:"+ System erfassen", enterCode:"Code eingeben",
+ edit:"Bearbeiten", delSys:"System löschen", critNow:(c,t)=>`kritisch ab <span class="num">${c}</span> · aktuell <span class="num">${t}</span>`, noSystems:"Noch keine Systeme erfasst.",
+ backup:"Datensicherung", backupHint:"Die Daten liegen nur auf diesem Handy. Mach ab und zu eine Sicherung, z. B. vor einem Handywechsel. Beim Einlesen werden Systeme mit gleicher Nummer durch die Sicherung ersetzt.",
+ backupSave:"Sicherung speichern", backupLoad:"Sicherung einlesen",
+ emptyHead:"Noch kein System erfasst", emptyText:"Lege zuerst eine Systemnummer und den kritischen Bereich an. Danach kannst du hier Schüsse eintragen.", addSysShort:"System erfassen",
+ errName:"Bitte zuerst deinen Namen eingeben.", errNetCode:"Zum Erstellen des Codes braucht es Internet.", making:"Code wird erstellt …",
+ codeMade:"Code erstellt. Schick ihn an die Person, mit der du das System teilst.", errGeneric:"Das hat nicht geklappt. Prüfe die Internetverbindung und versuche es nochmals.",
+ shareText:(sys,code,url)=>`Schusszahlrechner: Code für System ${sys}: ${code}\nIn der App unter «Systeme» → «Code eingeben».\n${url}`,
+ copied:"In die Zwischenablage kopiert.", copyFail:"Kopieren ging nicht. Halte den Code gedrückt, um ihn zu markieren.", unshared:"Teilen auf diesem Handy beendet.",
+ entryDeleted:"Eintrag gelöscht.", errShots:"Bitte eine Schusszahl grösser als 0 eingeben.",
+ tCritNew:(l,t,c)=>`System ${l} hat den kritischen Bereich erreicht (${t} von ${c} Schuss).`,
+ tCrit:(n,l,o)=>`${n} Schuss eingetragen. ${l} ist ${o} Schuss über dem kritischen Bereich.`,
+ tWarn:(n,l,r)=>`${n} Schuss eingetragen. Achtung: ${l} ist bald kritisch, noch ${r} Schuss.`,
+ tOk:(n,l,r)=>`${n} Schuss auf ${l} eingetragen. Noch ${r} bis kritisch.`,
+ errCodeLen:"Der Code hat 8 Zeichen, z. B. K7MP-4QXA.", errName2:"Bitte deinen Namen eingeben.", errNetJoin:"Zum Verbinden braucht es Internet.", connecting:"Verbinde …",
+ joined:sys=>`Verbunden mit System ${sys}. Einträge werden ab jetzt abgeglichen.`, errNoCode:"Diesen Code gibt es nicht. Prüfe die Schreibweise.", errAlready:"Dieses System ist auf deinem Handy schon verbunden.",
+ errNr:"Bitte eine Systemnummer eingeben.", errCrit:"Bitte den kritischen Bereich als Schusszahl eingeben.", errDup:"Diese Systemnummer gibt es schon.",
+ bkShared:"Sicherung weitergegeben.", bkSaved:x=>"Sicherung gespeichert: "+x, bkRead:n=>`${n} System${n===1?"":"e"} eingelesen.`, bkBad:"Die Datei ist keine gültige Sicherung dieser App.",
+ errSave:"Speichern hat nicht geklappt. Prüfe die Verbindung und versuche es nochmals.", someone:"Jemand", views:"Ansichten"
+},
+fr:{
+ title:"Compteur de coups", tabErf:"Saisir", tabStat:"Statistique", tabSys:"Systèmes", langLbl:"Langue",
+ lvOk:"dans le vert", lvWarn:"bientôt critique", lvCrit:"seuil critique atteint",
+ newsHead:"Nouveau depuis la dernière ouverture", newsLine:(by,n,sys,d,tot)=>`<b>${by}</b> a saisi ${n} coups sur <b>${sys}</b> (${d}). Nouveau total : <b class="num">${tot}</b>`,
+ shared:"Partagé", sSync:"Partagé · synchronisé", sOff:"Partagé · hors ligne", sWait:w=>`Partagé · ${w} modification${w===1?"":"s"} en attente d’Internet`,
+ pick:"Choisir le système", total:"Total", kal:"Cal.", critFrom:"critique dès", critReached:"Seuil critique atteint", above:x=>`(${x} au-dessus)`,
+ left:x=>`Encore <b class="num">${x}</b> coups jusqu’au seuil critique`, shots:"Coups", date:"Date", enter:"Enregistrer",
+ lastEntries:"Dernières saisies", olderEntries:x=>`${x} saisies plus anciennes – toutes dans la statistique.`, noEntriesSys:"Aucune saisie pour ce système.",
+ delEntry:"Supprimer la saisie", delQ:"Supprimer ?",
+ statHead:"Coups restants jusqu’au seuil critique", overCrit:"au-dessus du seuil critique", shotsUntil:x=>`coups restants jusqu’à ${x}`,
+ used:"Utilisé", avg:"Ø / saisie", nEntries:(n,d)=>`${n} saisies · dernière le ${d}`, noEntries:"Aucune saisie",
+ est:x=>` · au rythme actuel, encore env. ${x} saisies`, startVal:x=>` · état initial ${x}`, allEntries:"Toutes les saisies",
+ editSys:"Modifier le système", newSys:"Nouveau système", sysNr:"Numéro du système", kaliber:"Calibre", label:"Désignation (facultatif)", phLabel:"p. ex. canon 2", phNr:"p. ex. 4711", phKal:"p. ex. .22 lr", phCrit:"p. ex. 5000",
+ critAt:"Critique dès (coups)", start:"État initial", startHint:"État initial : coups que le système avait déjà avant ta première saisie ici.",
+ save:"Enregistrer", create:"Créer le système", cancel:"Annuler",
+ yourName:"Ton nom (visible par les autres)", phName:"p. ex. René",
+ shareOff:"Le partage n’est pas encore configuré dans cette version.", shareWith:"Partager avec d’autres",
+ sharedHint:"Toute personne qui saisit ce code dans son app enregistre sur le même système. Chacun voit les coups des autres.",
+ sendCode:"Envoyer le code", copy:"Copier", unshareQ:"Vraiment arrêter ? Touche encore une fois", unshare:"Ne plus partager sur ce téléphone",
+ unshareHint:"Cela ne concerne que ce téléphone. Les saisies restent ici, mais ne sont plus synchronisées.",
+ shareHint:"Crée un code. Toute personne qui le saisit dans son app enregistre sur le même système. À l’ouverture de l’app, tu vois ce que les autres ont saisi.",
+ makeCode:"Créer un code", joinHead:"Ajouter un système partagé",
+ joinHint:"Saisis le code que tu as reçu. Si tu as déjà ce système avec le même numéro, tes saisies seront fusionnées.",
+ code:"Code", connect:"Connecter", addSys:"+ Ajouter un système", enterCode:"Saisir un code",
+ edit:"Modifier", delSys:"Supprimer le système", critNow:(c,t)=>`critique dès <span class="num">${c}</span> · actuel <span class="num">${t}</span>`, noSystems:"Aucun système enregistré.",
+ backup:"Sauvegarde", backupHint:"Les données sont uniquement sur ce téléphone. Fais de temps en temps une sauvegarde, p. ex. avant de changer de téléphone. À l’import, les systèmes portant le même numéro sont remplacés par la sauvegarde.",
+ backupSave:"Enregistrer la sauvegarde", backupLoad:"Importer la sauvegarde",
+ emptyHead:"Aucun système enregistré", emptyText:"Crée d’abord un numéro de système et le seuil critique. Ensuite, tu pourras saisir tes coups ici.", addSysShort:"Ajouter un système",
+ errName:"Saisis d’abord ton nom.", errNetCode:"Il faut Internet pour créer le code.", making:"Création du code …",
+ codeMade:"Code créé. Envoie-le à la personne avec qui tu partages le système.", errGeneric:"Cela n’a pas fonctionné. Vérifie la connexion Internet et réessaie.",
+ shareText:(sys,code,url)=>`Compteur de coups : code pour le système ${sys} : ${code}\nDans l’app sous « Systèmes » → « Saisir un code ».\n${url}`,
+ copied:"Copié dans le presse-papiers.", copyFail:"La copie n’a pas fonctionné. Maintiens le doigt sur le code pour le sélectionner.", unshared:"Partage arrêté sur ce téléphone.",
+ entryDeleted:"Saisie supprimée.", errShots:"Saisis un nombre de coups supérieur à 0.",
+ tCritNew:(l,t,c)=>`Le système ${l} a atteint le seuil critique (${t} sur ${c} coups).`,
+ tCrit:(n,l,o)=>`${n} coups enregistrés. ${l} est ${o} coups au-dessus du seuil critique.`,
+ tWarn:(n,l,r)=>`${n} coups enregistrés. Attention : ${l} sera bientôt critique, encore ${r} coups.`,
+ tOk:(n,l,r)=>`${n} coups enregistrés sur ${l}. Encore ${r} jusqu’au seuil critique.`,
+ errCodeLen:"Le code a 8 caractères, p. ex. K7MP-4QXA.", errName2:"Saisis ton nom.", errNetJoin:"Il faut Internet pour se connecter.", connecting:"Connexion …",
+ joined:sys=>`Connecté au système ${sys}. Les saisies sont désormais synchronisées.`, errNoCode:"Ce code n’existe pas. Vérifie l’orthographe.", errAlready:"Ce système est déjà connecté sur ton téléphone.",
+ errNr:"Saisis un numéro de système.", errCrit:"Saisis le seuil critique en nombre de coups.", errDup:"Ce numéro de système existe déjà.",
+ bkShared:"Sauvegarde transmise.", bkSaved:x=>"Sauvegarde enregistrée : "+x, bkRead:n=>`${n} système${n===1?"":"s"} importé${n===1?"":"s"}.`, bkBad:"Ce fichier n’est pas une sauvegarde valide de cette app.",
+ errSave:"L’enregistrement n’a pas fonctionné. Vérifie la connexion et réessaie.", someone:"Quelqu’un", views:"Vues"
+},
+it:{
+ title:"Contacolpi", tabErf:"Registra", tabStat:"Statistica", tabSys:"Sistemi", langLbl:"Lingua",
+ lvOk:"nel verde", lvWarn:"presto critico", lvCrit:"soglia critica raggiunta",
+ newsHead:"Novità dall’ultima apertura", newsLine:(by,n,sys,d,tot)=>`<b>${by}</b> ha registrato ${n} colpi su <b>${sys}</b> (${d}). Nuovo totale: <b class="num">${tot}</b>`,
+ shared:"Condiviso", sSync:"Condiviso · sincronizzato", sOff:"Condiviso · offline", sWait:w=>`Condiviso · ${w} modific${w===1?"a":"he"} in attesa di Internet`,
+ pick:"Scegli il sistema", total:"Totale", kal:"Cal.", critFrom:"critico da", critReached:"Soglia critica raggiunta", above:x=>`(${x} oltre)`,
+ left:x=>`Ancora <b class="num">${x}</b> colpi fino alla soglia critica`, shots:"Colpi", date:"Data", enter:"Registra",
+ lastEntries:"Ultime registrazioni", olderEntries:x=>`${x} registrazioni meno recenti – tutte nella statistica.`, noEntriesSys:"Nessuna registrazione per questo sistema.",
+ delEntry:"Elimina registrazione", delQ:"Eliminare?",
+ statHead:"Colpi rimanenti fino alla soglia critica", overCrit:"oltre la soglia critica", shotsUntil:x=>`colpi ancora fino a ${x}`,
+ used:"Consumato", avg:"Ø / registrazione", nEntries:(n,d)=>`${n} registrazioni · ultima il ${d}`, noEntries:"Nessuna registrazione",
+ est:x=>` · allo stesso ritmo ancora ca. ${x} registrazioni`, startVal:x=>` · stato iniziale ${x}`, allEntries:"Tutte le registrazioni",
+ editSys:"Modifica sistema", newSys:"Nuovo sistema", sysNr:"Numero di sistema", kaliber:"Calibro", label:"Descrizione (facoltativa)", phLabel:"p. es. canna 2", phNr:"p. es. 4711", phKal:"p. es. .22 lr", phCrit:"p. es. 5000",
+ critAt:"Critico da (colpi)", start:"Stato iniziale", startHint:"Stato iniziale: colpi che il sistema aveva già prima della tua prima registrazione qui.",
+ save:"Salva", create:"Crea sistema", cancel:"Annulla",
+ yourName:"Il tuo nome (visibile agli altri)", phName:"p. es. René",
+ shareOff:"La condivisione non è ancora configurata in questa versione.", shareWith:"Condividi con altri",
+ sharedHint:"Chi inserisce questo codice nella sua app registra sullo stesso sistema. Tutti vedono i colpi degli altri.",
+ sendCode:"Invia codice", copy:"Copia", unshareQ:"Interrompere davvero? Tocca di nuovo", unshare:"Non condividere più su questo telefono",
+ unshareHint:"Riguarda solo questo telefono. Le registrazioni restano qui, ma non vengono più sincronizzate.",
+ shareHint:"Crea un codice. Chi lo inserisce nella sua app registra sullo stesso sistema. All’apertura dell’app vedi cosa hanno registrato gli altri.",
+ makeCode:"Crea codice", joinHead:"Aggiungi sistema condiviso",
+ joinHint:"Inserisci il codice che hai ricevuto. Se hai già questo sistema con lo stesso numero, le tue registrazioni vengono unite.",
+ code:"Codice", connect:"Collega", addSys:"+ Aggiungi sistema", enterCode:"Inserisci codice",
+ edit:"Modifica", delSys:"Elimina sistema", critNow:(c,t)=>`critico da <span class="num">${c}</span> · attuale <span class="num">${t}</span>`, noSystems:"Nessun sistema registrato.",
+ backup:"Backup", backupHint:"I dati si trovano solo su questo telefono. Fai ogni tanto un backup, p. es. prima di cambiare telefono. All’importazione, i sistemi con lo stesso numero vengono sostituiti dal backup.",
+ backupSave:"Salva backup", backupLoad:"Importa backup",
+ emptyHead:"Nessun sistema registrato", emptyText:"Crea prima un numero di sistema e la soglia critica. Poi potrai registrare qui i colpi.", addSysShort:"Aggiungi sistema",
+ errName:"Inserisci prima il tuo nome.", errNetCode:"Per creare il codice serve Internet.", making:"Creazione del codice …",
+ codeMade:"Codice creato. Invialo alla persona con cui condividi il sistema.", errGeneric:"Non ha funzionato. Controlla la connessione Internet e riprova.",
+ shareText:(sys,code,url)=>`Contacolpi: codice per il sistema ${sys}: ${code}\nNell’app in «Sistemi» → «Inserisci codice».\n${url}`,
+ copied:"Copiato negli appunti.", copyFail:"La copia non ha funzionato. Tieni premuto il codice per selezionarlo.", unshared:"Condivisione interrotta su questo telefono.",
+ entryDeleted:"Registrazione eliminata.", errShots:"Inserisci un numero di colpi maggiore di 0.",
+ tCritNew:(l,t,c)=>`Il sistema ${l} ha raggiunto la soglia critica (${t} su ${c} colpi).`,
+ tCrit:(n,l,o)=>`${n} colpi registrati. ${l} è ${o} colpi oltre la soglia critica.`,
+ tWarn:(n,l,r)=>`${n} colpi registrati. Attenzione: ${l} sarà presto critico, ancora ${r} colpi.`,
+ tOk:(n,l,r)=>`${n} colpi registrati su ${l}. Ancora ${r} fino alla soglia critica.`,
+ errCodeLen:"Il codice ha 8 caratteri, p. es. K7MP-4QXA.", errName2:"Inserisci il tuo nome.", errNetJoin:"Per collegarsi serve Internet.", connecting:"Collegamento …",
+ joined:sys=>`Collegato al sistema ${sys}. Da ora le registrazioni vengono sincronizzate.`, errNoCode:"Questo codice non esiste. Controlla l’ortografia.", errAlready:"Questo sistema è già collegato sul tuo telefono.",
+ errNr:"Inserisci un numero di sistema.", errCrit:"Inserisci la soglia critica come numero di colpi.", errDup:"Questo numero di sistema esiste già.",
+ bkShared:"Backup inviato.", bkSaved:x=>"Backup salvato: "+x, bkRead:n=>`${n} sistem${n===1?"a importato":"i importati"}.`, bkBad:"Il file non è un backup valido di questa app.",
+ errSave:"Il salvataggio non ha funzionato. Controlla la connessione e riprova.", someone:"Qualcuno", views:"Viste"
+},
+en:{
+ title:"Shot Counter", tabErf:"Record", tabStat:"Statistics", tabSys:"Systems", langLbl:"Language",
+ lvOk:"in the green", lvWarn:"almost critical", lvCrit:"critical reached",
+ newsHead:"New since you last opened the app", newsLine:(by,n,sys,d,tot)=>`<b>${by}</b> recorded ${n} shots on <b>${sys}</b> (${d}). New total: <b class="num">${tot}</b>`,
+ shared:"Shared", sSync:"Shared · in sync", sOff:"Shared · offline", sWait:w=>`Shared · ${w} change${w===1?"":"s"} waiting for internet`,
+ pick:"Choose system", total:"Total", kal:"Cal.", critFrom:"critical at", critReached:"Critical limit reached", above:x=>`(${x} over)`,
+ left:x=>`<b class="num">${x}</b> shots left until the critical limit`, shots:"Shots", date:"Date", enter:"Record",
+ lastEntries:"Recent entries", olderEntries:x=>`${x} older entries – all in Statistics.`, noEntriesSys:"No entries for this system yet.",
+ delEntry:"Delete entry", delQ:"Delete?",
+ statHead:"Shots left until critical", overCrit:"over the critical limit", shotsUntil:x=>`shots left until ${x}`,
+ used:"Used", avg:"Ø / entry", nEntries:(n,d)=>`${n} entries · last on ${d}`, noEntries:"No entries yet",
+ est:x=>` · at this rate about ${x} more entries`, startVal:x=>` · starting count ${x}`, allEntries:"All entries",
+ editSys:"Edit system", newSys:"New system", sysNr:"System number", kaliber:"Calibre", label:"Label (optional)", phLabel:"e.g. barrel 2", phNr:"e.g. 4711", phKal:"e.g. .22 lr", phCrit:"e.g. 5000",
+ critAt:"Critical at (shots)", start:"Starting count", startHint:"Starting count: shots the system already had before you started recording here.",
+ save:"Save", create:"Create system", cancel:"Cancel",
+ yourName:"Your name (visible to others)", phName:"e.g. René",
+ shareOff:"Sharing is not set up in this version yet.", shareWith:"Share with others",
+ sharedHint:"Anyone who enters this code in their app records on the same system. Everyone sees the others’ shots.",
+ sendCode:"Send code", copy:"Copy", unshareQ:"Really stop? Tap again", unshare:"Stop sharing on this phone",
+ unshareHint:"This only affects this phone. The entries stay here but are no longer synced.",
+ shareHint:"Creates a code. Anyone who enters it in their app records on the same system. When you open the app, you see what the others recorded.",
+ makeCode:"Create code", joinHead:"Add shared system",
+ joinHint:"Enter the code you received. If you already have this system with the same number, your entries will be merged.",
+ code:"Code", connect:"Connect", addSys:"+ Add system", enterCode:"Enter code",
+ edit:"Edit", delSys:"Delete system", critNow:(c,t)=>`critical at <span class="num">${c}</span> · now <span class="num">${t}</span>`, noSystems:"No systems yet.",
+ backup:"Backup", backupHint:"The data is stored only on this phone. Make a backup now and then, e.g. before changing phones. When importing, systems with the same number are replaced by the backup.",
+ backupSave:"Save backup", backupLoad:"Import backup",
+ emptyHead:"No system yet", emptyText:"First add a system number and the critical limit. Then you can record shots here.", addSysShort:"Add system",
+ errName:"Please enter your name first.", errNetCode:"Creating a code needs an internet connection.", making:"Creating code …",
+ codeMade:"Code created. Send it to the person you share the system with.", errGeneric:"That didn’t work. Check your internet connection and try again.",
+ shareText:(sys,code,url)=>`Shot Counter: code for system ${sys}: ${code}\nIn the app under “Systems” → “Enter code”.\n${url}`,
+ copied:"Copied to clipboard.", copyFail:"Copying didn’t work. Press and hold the code to select it.", unshared:"Sharing stopped on this phone.",
+ entryDeleted:"Entry deleted.", errShots:"Please enter a number of shots greater than 0.",
+ tCritNew:(l,t,c)=>`System ${l} has reached the critical limit (${t} of ${c} shots).`,
+ tCrit:(n,l,o)=>`${n} shots recorded. ${l} is ${o} shots over the critical limit.`,
+ tWarn:(n,l,r)=>`${n} shots recorded. Note: ${l} is almost critical, ${r} shots left.`,
+ tOk:(n,l,r)=>`${n} shots recorded on ${l}. ${r} left until critical.`,
+ errCodeLen:"The code has 8 characters, e.g. K7MP-4QXA.", errName2:"Please enter your name.", errNetJoin:"Connecting needs an internet connection.", connecting:"Connecting …",
+ joined:sys=>`Connected to system ${sys}. Entries are now synced.`, errNoCode:"This code doesn’t exist. Check the spelling.", errAlready:"This system is already connected on your phone.",
+ errNr:"Please enter a system number.", errCrit:"Please enter the critical limit as a number of shots.", errDup:"This system number already exists.",
+ bkShared:"Backup shared.", bkSaved:x=>"Backup saved: "+x, bkRead:n=>`${n} system${n===1?"":"s"} imported.`, bkBad:"This file is not a valid backup of this app.",
+ errSave:"Saving didn’t work. Check the connection and try again.", someone:"Someone", views:"Views"
+}};
+let lang = (()=>{ try{ const v=localStorage.getItem("schusszahl.v1.lang"); if(LANGS.includes(v)) return v; }catch(e){}
+  const n=(navigator.languages&&navigator.languages[0]||navigator.language||"de").slice(0,2).toLowerCase(); return LANGS.includes(n)?n:"de"; })();
+const T = (k,...a) => { const v=(I18N[lang]&&I18N[lang][k]!==undefined)?I18N[lang][k]:I18N.de[k]; return typeof v==="function"?v(...a):v; };
+let langOpen = false;
+function applyStatic(){
+  document.documentElement.lang = lang;
+  document.title = T("title")+" By René Homberger";
+  const q=s=>document.querySelector(s);
+  q("#hTitle").textContent=T("title");
+  q("#tErf").textContent=T("tabErf"); q("#tStat").textContent=T("tabStat"); q("#tSys").textContent=T("tabSys");
+  q("nav.tabs").setAttribute("aria-label",T("views"));
+  const lb=q("#langBtn"); lb.textContent=lang.toUpperCase(); lb.setAttribute("aria-expanded",String(langOpen)); lb.setAttribute("aria-label",T("langLbl")+": "+lang.toUpperCase());
+  const m=q("#langMenu"); m.hidden=!langOpen;
+  m.innerHTML=LANGS.map(l=>`<button data-lang="${l}" aria-pressed="${l===lang}">${l.toUpperCase()}</button>`).join("");
+}
+
 
 let systems = [];      // [{id,nr,name,crit,start,entries:[{id,d,n}]}]
 let mode = "local";
@@ -335,7 +533,7 @@ const Sync = {
       const ns={...cur, entries:[...map.values()], delPend, gone:[...gone].slice(-500), lastAt, synced:true};
       if(cur.synced && fresh.length){
         const tot=calc(ns).total;
-        fresh.forEach(e=>news.push({sys:sysLabel(ns), by:e.by||"Jemand", n:e.n, d:e.d, total:tot}));
+        fresh.forEach(e=>news.push({sys:sysLabel(ns), by:e.by||T("someone"), n:e.n, d:e.d, total:tot}));
         saveNews();
       }
       replaceSystem(ns);
@@ -388,7 +586,7 @@ function calc(s){
   const estLeft = avg>0 && remaining>0 ? Math.ceil(remaining/avg) : null;
   return {fired,total,crit,remaining,pct,level,n,avg,last,sorted,estLeft,over:Math.max(0,total-crit)};
 }
-const LEVEL_TXT = {ok:"im grünen Bereich",warn:"bald kritisch",crit:"kritisch erreicht"};
+const lvTxt = l => T(l==="crit"?"lvCrit":l==="warn"?"lvWarn":"lvOk");
 const sysLabel = s => s.name ? `${s.nr} · ${s.name}` : s.nr;
 const sysFull = s => [s.nr, s.kal, s.name].filter(Boolean).join(" · ");
 const sortSys = arr => [...arr].sort((a,b)=>String(a.nr).localeCompare(String(b.nr),"de",{numeric:true}));
@@ -441,15 +639,15 @@ const IC_LINK='<svg viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 
 function viewNews(){
   if(!news.length) return "";
   return `<section class="news" role="status">
-    <h3>${IC_LINK}Neu seit dem letzten Öffnen</h3>
-    <ul>${news.map(x=>`<li><b>${esc(x.by)}</b> hat ${fmt(x.n)} Schuss auf <b>${esc(x.sys)}</b> eingetragen (${fdate(x.d)}). Neuer Stand: <b class="num">${fmt(x.total)}</b></li>`).join("")}</ul>
+    <h3>${IC_LINK}${T("newsHead")}</h3>
+    <ul>${news.map(x=>`<li>${T("newsLine",esc(x.by),fmt(x.n),esc(x.sys),fdate(x.d),fmt(x.total))}</li>`).join("")}</ul>
     <button class="btn" data-news-ok>OK</button>
   </section>`;
 }
 function syncLine(s){
   if(!s.share) return "";
   const waiting=(s.entries||[]).filter(e=>e.pend).length+(s.delPend||[]).length;
-  const txt = !Sync.enabled() ? "Geteilt" : waiting ? `Geteilt · ${waiting} Änderung${waiting===1?"":"en"} warten auf Internet` : (Sync.online ? "Geteilt · synchron" : "Geteilt · offline");
+  const txt = !Sync.enabled() ? T("shared") : waiting ? T("sWait",waiting) : (Sync.online ? T("sSync") : T("sOff"));
   return `<div class="syncline"><span class="shared">${IC_LINK}${txt}</span></div>`;
 }
 
@@ -460,30 +658,30 @@ function viewErfassen(){
   const s = list.find(x=>x.id===selId), c = calc(s);
   return `
   <section style="display:flex;flex-direction:column;gap:10px">
-    <h2>System wählen</h2>
+    <h2>${T("pick")}</h2>
     <div class="chips">${list.map(x=>{const cc=calc(x);return `<button class="chip" data-sel="${x.id}" aria-pressed="${x.id===selId}"><span class="dot ${cc.level}"></span>${esc(sysLabel(x))}</button>`}).join("")}</div>
   </section>
   <section class="panel">
     <div class="counter">
-      <div style="display:flex;flex-direction:column;gap:4px"><span class="lbl">Gesamt</span><span class="big" id="bigTotal" data-to="${c.total}">${fmt(c.total)}</span></div>
-      <div class="side">${s.kal?`<span class="cal"><small>Kal.</small>${esc(s.kal)}</span>`:""}<div class="of">kritisch ab <span class="num">${fmt(c.crit)}</span></div></div>
+      <div style="display:flex;flex-direction:column;gap:4px"><span class="lbl">${T("total")}</span><span class="big" id="bigTotal" data-to="${c.total}">${fmt(c.total)}</span></div>
+      <div class="side">${s.kal?`<span class="cal"><small>${T("kal")}</small>${esc(s.kal)}</span>`:""}<div class="of">${T("critFrom")} <span class="num">${fmt(c.crit)}</span></div></div>
     </div>
     ${bar(c)}
     ${syncLine(s)}
-    <div class="hint">${c.level==="crit" ? `<b style="color:var(--crit)">Kritischer Bereich erreicht</b> (${fmt(c.over)} darüber)` : `Noch <b class="num">${fmt(c.remaining)}</b> Schuss bis zum kritischen Bereich`}</div>
+    <div class="hint">${c.level==="crit" ? `<b style="color:var(--crit)">${T("critReached")}</b> ${T("above",fmt(c.over))}` : T("left",fmt(c.remaining))}</div>
     <form id="addForm" style="display:flex;flex-direction:column;gap:12px" novalidate>
       <div class="row">
-        <label class="field" style="flex:2 1 150px"><span class="lbl">Schüsse</span><input class="shots" id="shots" type="number" inputmode="numeric" min="1" step="1" placeholder="0"></label>
-        <label class="field"><span class="lbl">Datum</span><input id="date" type="date" value="${today()}"></label>
+        <label class="field" style="flex:2 1 150px"><span class="lbl">${T("shots")}</span><input class="shots" id="shots" type="number" inputmode="numeric" min="1" step="1" placeholder="0"></label>
+        <label class="field"><span class="lbl">${T("date")}</span><input id="date" type="date" value="${today()}"></label>
       </div>
       <div class="err" id="addErr"></div>
-      <button class="btn" type="submit">Eintragen</button>
+      <button class="btn" type="submit">${T("enter")}</button>
       <div aria-live="polite">${toast?note(toast,toastLevel):""}</div>
     </form>
   </section>
   <section style="display:flex;flex-direction:column;gap:8px">
-    <h2>Letzte Einträge</h2>
-    ${c.sorted.length ? `<ul class="list">${c.sorted.slice(0,8).map(e=>`<li><span class="d">${fdate(e.d)}${s.share&&e.by?`<span class="who">${esc(e.by)}</span>`:""}</span><span class="n">${fmt(e.n)}</span><button class="x ${armed==="e:"+e.id?"armed":""}" data-del-entry="${e.id}" aria-label="Eintrag löschen">${armed==="e:"+e.id?"Löschen?":"×"}</button></li>`).join("")}</ul>${c.sorted.length>8?`<div class="hint">${c.sorted.length-8} ältere Einträge – alle in der Statistik.</div>`:""}` : `<div class="hint">Noch keine Einträge für dieses System.</div>`}
+    <h2>${T("lastEntries")}</h2>
+    ${c.sorted.length ? `<ul class="list">${c.sorted.slice(0,8).map(e=>`<li><span class="d">${fdate(e.d)}${s.share&&e.by?`<span class="who">${esc(e.by)}</span>`:""}</span><span class="n">${fmt(e.n)}</span><button class="x ${armed==="e:"+e.id?"armed":""}" data-del-entry="${e.id}" aria-label="${T("delEntry")}">${armed==="e:"+e.id?T("delQ"):"×"}</button></li>`).join("")}</ul>${c.sorted.length>8?`<div class="hint">${T("olderEntries",c.sorted.length-8)}</div>`:""}` : `<div class="hint">${T("noEntriesSys")}</div>`}
   </section>`;
 }
 
@@ -491,22 +689,22 @@ function viewStatistik(){
   if(!systems.length) return emptySystems();
   const list = sortSys(systems).map(s=>({s,c:calc(s)})).sort((a,b)=>a.c.remaining-b.c.remaining);
   return `<section style="display:flex;flex-direction:column;gap:12px">
-    <h2>Restschüsse bis kritisch</h2>
+    <h2>${T("statHead")}</h2>
     ${list.map(({s,c})=>`
     <article class="stat ${c.level}">
-      <div class="top"><span class="name">${esc(s.nr)}${s.kal?` · <span class="k">${esc(s.kal)}</span>`:""}${s.name?` · ${esc(s.name)}`:""}</span><span class="pill ${c.level}">${LEVEL_TXT[c.level]}</span></div>
-      ${s.share?`<span class="shared">${IC_LINK}Geteilt</span>`:""}
+      <div class="top"><span class="name">${esc(s.nr)}${s.kal?` · <span class="k">${esc(s.kal)}</span>`:""}${s.name?` · ${esc(s.name)}`:""}</span><span class="pill ${c.level}">${lvTxt(c.level)}</span></div>
+      ${s.share?`<span class="shared">${IC_LINK}${T("shared")}</span>`:""}
       <div class="remain">${c.level==="crit"
-        ? `<span class="big" style="color:var(--crit)">+${fmt(c.over)}</span><span class="hint">über dem kritischen Bereich</span>`
-        : `<span class="big">${fmt(c.remaining)}</span><span class="hint">Schuss noch bis ${fmt(c.crit)}</span>`}</div>
+        ? `<span class="big" style="color:var(--crit)">+${fmt(c.over)}</span><span class="hint">${T("overCrit")}</span>`
+        : `<span class="big">${fmt(c.remaining)}</span><span class="hint">${T("shotsUntil",fmt(c.crit))}</span>`}</div>
       ${bar(c)}
       <div class="kv">
-        <div><span class="lbl">Gesamt</span><b>${fmt(c.total)}</b></div>
-        <div><span class="lbl">Verbraucht</span><b>${Math.round(c.pct*100)} %</b></div>
-        <div><span class="lbl">Ø / Eintrag</span><b>${c.n?fmt(c.avg):"–"}</b></div>
+        <div><span class="lbl">${T("total")}</span><b>${fmt(c.total)}</b></div>
+        <div><span class="lbl">${T("used")}</span><b>${Math.round(c.pct*100)} %</b></div>
+        <div><span class="lbl">${T("avg")}</span><b>${c.n?fmt(c.avg):"–"}</b></div>
       </div>
-      <div class="hint">${c.n?`${c.n} Einträge · zuletzt ${fdate(c.last)}`:"Noch keine Einträge"}${c.estLeft?` · bei gleichem Schnitt noch ca. ${c.estLeft} Einträge`:""}${+s.start?` · Startstand ${fmt(s.start)}`:""}</div>
-      ${c.n?`<details><summary class="hint" style="cursor:pointer">Alle Einträge</summary><ul class="list">${c.sorted.map(e=>`<li><span class="d">${fdate(e.d)}${s.share&&e.by?`<span class="who">${esc(e.by)}</span>`:""}</span><span class="n">${fmt(e.n)}</span></li>`).join("")}</ul></details>`:""}
+      <div class="hint">${c.n?T("nEntries",c.n,fdate(c.last)):T("noEntries")}${c.estLeft?T("est",c.estLeft):""}${+s.start?T("startVal",fmt(s.start)):""}</div>
+      ${c.n?`<details><summary class="hint" style="cursor:pointer">${T("allEntries")}</summary><ul class="list">${c.sorted.map(e=>`<li><span class="d">${fdate(e.d)}${s.share&&e.by?`<span class="who">${esc(e.by)}</span>`:""}</span><span class="n">${fmt(e.n)}</span></li>`).join("")}</ul></details>`:""}
     </article>`).join("")}
   </section>`;
 }
@@ -514,51 +712,51 @@ function viewStatistik(){
 function sysForm(){
   const s = editId ? systems.find(x=>x.id===editId) : null;
   return `<form class="panel" id="sysForm" novalidate>
-    <h2>${s?"System bearbeiten":"Neues System"}</h2>
+    <h2>${s?T("editSys"):T("newSys")}</h2>
     <div class="row">
-      <label class="field"><span class="lbl">Systemnummer</span><input type="text" id="f-nr" value="${esc(s?.nr)}" placeholder="z. B. 4711" autocomplete="off"></label>
-      <label class="field"><span class="lbl">Kaliber</span><input type="text" id="f-kal" value="${esc(s?.kal)}" placeholder="z. B. .22 lr" autocomplete="off"></label>
+      <label class="field"><span class="lbl">${T("sysNr")}</span><input type="text" id="f-nr" value="${esc(s?.nr)}" placeholder="${T("phNr")}" autocomplete="off"></label>
+      <label class="field"><span class="lbl">${T("kaliber")}</span><input type="text" id="f-kal" value="${esc(s?.kal)}" placeholder="${T("phKal")}" autocomplete="off"></label>
     </div>
     <div class="row">
-      <label class="field"><span class="lbl">Bezeichnung (optional)</span><input type="text" id="f-name" value="${esc(s?.name)}" placeholder="z. B. Lauf 2" autocomplete="off"></label>
+      <label class="field"><span class="lbl">${T("label")}</span><input type="text" id="f-name" value="${esc(s?.name)}" placeholder="${T("phLabel")}" autocomplete="off"></label>
     </div>
     <div class="row">
-      <label class="field"><span class="lbl">Kritisch ab Schuss</span><input type="number" id="f-crit" inputmode="numeric" min="1" step="1" value="${s?.crit??""}" placeholder="z. B. 5000"></label>
-      <label class="field"><span class="lbl">Startstand</span><input type="number" id="f-start" inputmode="numeric" min="0" step="1" value="${s?.start??0}"></label>
+      <label class="field"><span class="lbl">${T("critAt")}</span><input type="number" id="f-crit" inputmode="numeric" min="1" step="1" value="${s?.crit??""}" placeholder="${T("phCrit")}"></label>
+      <label class="field"><span class="lbl">${T("start")}</span><input type="number" id="f-start" inputmode="numeric" min="0" step="1" value="${s?.start??0}"></label>
     </div>
-    <div class="hint">Startstand: Schüsse, die das System schon hatte, bevor du hier erfasst.</div>
+    <div class="hint">${T("startHint")}</div>
     <div class="err" id="sysErr"></div>
-    <div class="row"><button class="btn" type="submit" style="flex:1">${s?"Speichern":"System anlegen"}</button><button class="btn ghost" type="button" data-cancel>Abbrechen</button></div>
+    <div class="row"><button class="btn" type="submit" style="flex:1">${s?T("save"):T("create")}</button><button class="btn ghost" type="button" data-cancel>${T("cancel")}</button></div>
   </form>${s?shareBox(s):""}`;
 }
 function msgBox(){ return shareMsg.text?`<div class="toast" style="color:var(--${shareMsg.level==="err"?"crit":"ok"})">${esc(shareMsg.text)}</div>`:""; }
-function nameField(){ return `<label class="field"><span class="lbl">Dein Name (sehen die anderen)</span><input type="text" id="f-myname" value="${esc(myName)}" placeholder="z. B. René" autocomplete="off" maxlength="40"></label>`; }
+function nameField(){ return `<label class="field"><span class="lbl">${T("yourName")}</span><input type="text" id="f-myname" value="${esc(myName)}" placeholder="${T("phName")}" autocomplete="off" maxlength="40"></label>`; }
 function shareBox(s){
-  if(!Sync.enabled()) return `<section class="panel"><h2>Mit anderen teilen</h2><div class="hint">Teilen ist in dieser Version noch nicht eingerichtet.</div></section>`;
+  if(!Sync.enabled()) return `<section class="panel"><h2>${T("shareWith")}</h2><div class="hint">${T("shareOff")}</div></section>`;
   if(s.share) return `<section class="panel">
-    <h2>Geteilt</h2>
-    <div class="hint">Wer diesen Code in seiner App eingibt, trägt auf dasselbe System ein. Alle sehen die Schüsse der anderen.</div>
+    <h2>${T("shared")}</h2>
+    <div class="hint">${T("sharedHint")}</div>
     <div class="code" id="shareCode">${fmtCode(s.share)}</div>
-    <div class="row"><button class="btn ghost" style="flex:1" data-send-code="${s.id}">Code senden</button><button class="btn ghost" style="flex:1" data-copy-code="${s.id}">Kopieren</button></div>
-    <button class="btn ghost" data-unshare="${s.id}">${armed==="u:"+s.id?"Wirklich trennen? Nochmals tippen":"Auf diesem Handy nicht mehr teilen"}</button>
-    <div class="hint">Trennen betrifft nur dieses Handy. Die Einträge bleiben hier erhalten, werden aber nicht mehr abgeglichen.</div>
+    <div class="row"><button class="btn ghost" style="flex:1" data-send-code="${s.id}">${T("sendCode")}</button><button class="btn ghost" style="flex:1" data-copy-code="${s.id}">${T("copy")}</button></div>
+    <button class="btn ghost" data-unshare="${s.id}">${armed==="u:"+s.id?T("unshareQ"):T("unshare")}</button>
+    <div class="hint">${T("unshareHint")}</div>
     ${msgBox()}
   </section>`;
   return `<section class="panel">
-    <h2>Mit anderen teilen</h2>
-    <div class="hint">Erstellt einen Code. Wer ihn in seiner App eingibt, trägt auf dasselbe System ein. Beim Öffnen der App siehst du, was die anderen eingetragen haben.</div>
+    <h2>${T("shareWith")}</h2>
+    <div class="hint">${T("shareHint")}</div>
     <div class="row">${nameField()}</div>
-    <button class="btn" data-share="${s.id}">Code erstellen</button>
+    <button class="btn" data-share="${s.id}">${T("makeCode")}</button>
     ${msgBox()}
   </section>`;
 }
 function joinBox(){
   return `<form class="panel" id="joinForm" novalidate>
-    <h2>Geteiltes System hinzufügen</h2>
-    <div class="hint">Gib den Code ein, den du bekommen hast. Hast du dieses System schon mit gleicher Nummer erfasst, werden deine Einträge zusammengeführt.</div>
-    <div class="row"><label class="field"><span class="lbl">Code</span><input type="text" class="codein" id="f-code" placeholder="XXXX-XXXX" autocomplete="off" autocapitalize="characters" maxlength="9"></label></div>
+    <h2>${T("joinHead")}</h2>
+    <div class="hint">${T("joinHint")}</div>
+    <div class="row"><label class="field"><span class="lbl">${T("code")}</span><input type="text" class="codein" id="f-code" placeholder="XXXX-XXXX" autocomplete="off" autocapitalize="characters" maxlength="9"></label></div>
     <div class="row">${nameField()}</div>
-    <div class="row"><button class="btn" type="submit" style="flex:1">Verbinden</button><button class="btn ghost" type="button" data-join-cancel>Abbrechen</button></div>
+    <div class="row"><button class="btn" type="submit" style="flex:1">${T("connect")}</button><button class="btn ghost" type="button" data-join-cancel>${T("cancel")}</button></div>
     ${msgBox()}
   </form>`;
 }
@@ -566,17 +764,17 @@ function joinBox(){
 function viewSysteme(){
   const list = sortSys(systems);
   return `<section style="display:flex;flex-direction:column;gap:14px">
-    ${editId!==undefined ? sysForm() : shareUI==="join" ? joinBox() : `<div class="row"><button class="btn" data-new style="flex:1">+ System erfassen</button>${Sync.enabled()?`<button class="btn ghost" data-join style="flex:1">Code eingeben</button>`:""}</div>`}
+    ${editId!==undefined ? sysForm() : shareUI==="join" ? joinBox() : `<div class="row"><button class="btn" data-new style="flex:1">${T("addSys")}</button>${Sync.enabled()?`<button class="btn ghost" data-join style="flex:1">${T("enterCode")}</button>`:""}</div>`}
     ${list.length ? `<div class="panel" style="gap:0;padding-block:4px">${list.map(s=>{const c=calc(s);return `
       <div class="sys"><span class="dot ${c.level}"></span>
-        <div class="meta"><b>${esc(sysFull(s))}</b><span>kritisch ab <span class="num">${fmt(c.crit)}</span> · aktuell <span class="num">${fmt(c.total)}</span></span>${s.share?`<span class="shared" style="display:flex">${IC_LINK}Geteilt</span>`:""}</div>
-        <button class="x" data-edit="${s.id}" aria-label="Bearbeiten">✎</button>
-        <button class="x ${armed==="s:"+s.id?"armed":""}" data-del-sys="${s.id}" aria-label="System löschen">${armed==="s:"+s.id?"Löschen?":"×"}</button>
-      </div>`}).join("")}</div>` : (editId===undefined?`<div class="empty">Noch keine Systeme erfasst.</div>`:"")}
+        <div class="meta"><b>${esc(sysFull(s))}</b><span>${T("critNow",fmt(c.crit),fmt(c.total))}</span>${s.share?`<span class="shared" style="display:flex">${IC_LINK}${T("shared")}</span>`:""}</div>
+        <button class="x" data-edit="${s.id}" aria-label="${T("edit")}">✎</button>
+        <button class="x ${armed==="s:"+s.id?"armed":""}" data-del-sys="${s.id}" aria-label="${T("delSys")}">${armed==="s:"+s.id?T("delQ"):"×"}</button>
+      </div>`}).join("")}</div>` : (editId===undefined?`<div class="empty">${T("noSystems")}</div>`:"")}
     <section class="panel">
-      <h2>Datensicherung</h2>
-      <div class="hint">Die Daten liegen nur auf diesem Handy. Mach ab und zu eine Sicherung, z. B. vor einem Handywechsel. Beim Einlesen werden Systeme mit gleicher Nummer durch die Sicherung ersetzt.</div>
-      <div class="row"><button class="btn ghost" data-export style="flex:1">Sicherung speichern</button><button class="btn ghost" data-import style="flex:1">Sicherung einlesen</button></div>
+      <h2>${T("backup")}</h2>
+      <div class="hint">${T("backupHint")}</div>
+      <div class="row"><button class="btn ghost" data-export style="flex:1">${T("backupSave")}</button><button class="btn ghost" data-import style="flex:1">${T("backupLoad")}</button></div>
       <input type="file" id="importFile" accept="application/json,.json" hidden>
       <div class="toast" id="bkMsg" aria-live="polite"></div>
     </section>
@@ -585,13 +783,13 @@ function viewSysteme(){
 
 function emptySystems(){
   return `<div class="empty panel">
-    <b style="color:var(--fg);font-size:1.1rem">Noch kein System erfasst</b>
-    <span>Lege zuerst eine Systemnummer und den kritischen Bereich an. Danach kannst du hier Schüsse eintragen.</span>
-    <button class="btn" data-goto-new>System erfassen</button></div>`;
+    <b style="color:var(--fg);font-size:1.1rem">${T("emptyHead")}</b>
+    <span>${T("emptyText")}</span>
+    <button class="btn" data-goto-new>${T("addSysShort")}</button></div>`;
 }
 
 function render(){
-  setStore();
+  setStore(); applyStatic();
   const v = document.getElementById("view");
   const focusId = document.activeElement?.id;
   if(mode==="loading"){ v.innerHTML = `<div class="empty">Daten werden geladen …</div>`; return; }
@@ -615,29 +813,33 @@ function runAnim(){
 
 /* ---------- Interaktion ---------- */
 document.addEventListener("click", async e=>{
-  const t = e.target.closest("button"); if(!t) return;
+  const t = e.target.closest("button");
+  if(langOpen && !(t && (t.id==="langBtn" || t.dataset.lang))){ langOpen=false; applyStatic(); }
+  if(!t) return;
   if(t.dataset.tab){ tab=t.dataset.tab; armed=null; toast=""; render(); window.scrollTo(0,0); return; }
   if(t.dataset.sel){ selId=t.dataset.sel; try{localStorage.setItem(LS_KEY+".sel",selId)}catch(_){} armed=null; toast=""; render(); return; }
+  if(t.id==="langBtn"){ langOpen=!langOpen; applyStatic(); return; }
+  if(t.dataset.lang){ lang=t.dataset.lang; langOpen=false; try{localStorage.setItem("schusszahl.v1.lang",lang)}catch(_){} render(); return; }
   if(t.hasAttribute("data-news-ok")){ news=[]; saveNews(); render(); return; }
   if(t.hasAttribute("data-join")){ shareUI="join"; shareMsg={text:"",level:"ok"}; editId=undefined; render(); document.getElementById("f-code")?.focus(); return; }
   if(t.hasAttribute("data-join-cancel")){ shareUI=null; render(); return; }
   if(t.dataset.share){
     const nm=(document.getElementById("f-myname")?.value||"").trim();
-    if(!nm){ shareMsg={text:"Bitte zuerst deinen Namen eingeben.",level:"err"}; render(); return; }
+    if(!nm){ shareMsg={text:T("errName"),level:"err"}; render(); return; }
     myName=nm; try{localStorage.setItem(LS_NAME,nm)}catch(_){}
-    if(!navigator.onLine){ shareMsg={text:"Zum Erstellen des Codes braucht es Internet.",level:"err"}; render(); return; }
+    if(!navigator.onLine){ shareMsg={text:T("errNetCode"),level:"err"}; render(); return; }
     const s=systems.find(x=>x.id===t.dataset.share); if(!s) return;
-    t.disabled=true; t.textContent="Code wird erstellt …";
-    try{ await Sync.share(s); shareMsg={text:"Code erstellt. Schick ihn an die Person, mit der du das System teilst.",level:"ok"}; }
-    catch(err){ shareMsg={text:"Das hat nicht geklappt. Prüfe die Internetverbindung und versuche es nochmals.",level:"err"}; }
+    t.disabled=true; t.textContent=T("making");
+    try{ await Sync.share(s); shareMsg={text:T("codeMade"),level:"ok"}; }
+    catch(err){ shareMsg={text:T("errGeneric"),level:"err"}; }
     render(); return;
   }
   if(t.dataset.sendCode||t.dataset.copyCode){
     const s=systems.find(x=>x.id===(t.dataset.sendCode||t.dataset.copyCode)); if(!s||!s.share) return;
-    const txt=`Schusszahlrechner: Code für System ${sysFull(s)}: ${fmtCode(s.share)}\nIn der App unter «Systeme» → «Code eingeben».\nhttps://hombi1988.github.io/Schusszahlrechner/`;
+    const txt=T("shareText",sysFull(s),fmtCode(s.share),"https://hombi1988.github.io/Schusszahlrechner/");
     if(t.dataset.sendCode && navigator.share){ try{ await navigator.share({text:txt}); return; }catch(err){ if(err&&err.name==="AbortError") return; } }
-    try{ await navigator.clipboard.writeText(t.dataset.sendCode?txt:fmtCode(s.share)); shareMsg={text:"In die Zwischenablage kopiert.",level:"ok"}; }
-    catch(err){ shareMsg={text:"Kopieren ging nicht. Halte den Code gedrückt, um ihn zu markieren.",level:"err"}; }
+    try{ await navigator.clipboard.writeText(t.dataset.sendCode?txt:fmtCode(s.share)); shareMsg={text:T("copied"),level:"ok"}; }
+    catch(err){ shareMsg={text:T("copyFail"),level:"err"}; }
     render(); return;
   }
   if(t.dataset.unshare){
@@ -648,7 +850,7 @@ document.addEventListener("click", async e=>{
     Sync.unwatch(s.share);
     const {share,synced,delPend,gone,lastAt,...rest}=s;
     replaceSystem({...rest, entries:(s.entries||[]).map(({pend,...e})=>e)});
-    shareMsg={text:"Teilen auf diesem Handy beendet.",level:"ok"}; render(); return;
+    shareMsg={text:T("unshared"),level:"ok"}; render(); return;
   }
   if(t.hasAttribute("data-export")){ exportData(); return; }
   if(t.hasAttribute("data-import")){ document.getElementById("importFile").click(); return; }
@@ -673,7 +875,7 @@ document.addEventListener("click", async e=>{
     if(s.share){ const id=t.dataset.delEntry, wasPend=(s.entries||[]).find(x=>x.id===id)?.pend;
       if(!wasPend) ns.delPend=[...(s.delPend||[]),id];
       ns.gone=[...(s.gone||[]),id]; Sync.dropEntry(s.share,id); }
-    toast="Eintrag gelöscht."; toastLevel="ok";
+    toast=T("entryDeleted"); toastLevel="ok";
     try{ await putSystem(ns); }catch(err){ alertErr(); }
     return;
   }
@@ -685,7 +887,7 @@ document.addEventListener("submit", async e=>{
     const n = Math.round(+document.getElementById("shots").value);
     const d = document.getElementById("date").value || today();
     const errEl = document.getElementById("addErr");
-    if(!(n>0)){ errEl.textContent="Bitte eine Schusszahl grösser als 0 eingeben."; return; }
+    if(!(n>0)){ errEl.textContent=T("errShots"); return; }
     const s = systems.find(x=>x.id===selId); if(!s) return;
     const entry = s.share ? {id:uid(), d, n, by:myName, byId:Sync.uid||"", pend:true} : {id:uid(), d, n};
     const ns = {...s, entries:[...(s.entries||[]), entry]};
@@ -693,14 +895,14 @@ document.addEventListener("submit", async e=>{
     const cb = calc(s), after = calc(ns), before = cb.level;
     const label = esc(sysLabel(s));
     if(after.level==="crit" && before!=="crit"){
-      toastLevel="crit"; toast=`System ${label} hat den kritischen Bereich erreicht (${fmt(after.total)} von ${fmt(after.crit)} Schuss).`;
+      toastLevel="crit"; toast=T("tCritNew",label,fmt(after.total),fmt(after.crit));
     } else if(after.level==="crit"){
-      toastLevel="crit"; toast=`${fmt(n)} Schuss eingetragen. ${label} ist ${fmt(after.over)} Schuss über dem kritischen Bereich.`;
+      toastLevel="crit"; toast=T("tCrit",fmt(n),label,fmt(after.over));
     } else if(after.level==="warn" && before==="ok"){
-      toastLevel="warn"; toast=`${fmt(n)} Schuss eingetragen. Achtung: ${label} ist bald kritisch, noch ${fmt(after.remaining)} Schuss.`;
+      toastLevel="warn"; toast=T("tWarn",fmt(n),label,fmt(after.remaining));
     } else {
       toastLevel = after.level==="warn" ? "warn" : "ok";
-      toast=`${fmt(n)} Schuss auf ${label} eingetragen. Noch ${fmt(after.remaining)} bis kritisch.`;
+      toast=T("tOk",fmt(n),label,fmt(after.remaining));
     }
     if(toastLevel!=="ok" && after.level!==before){ try{ navigator.vibrate && navigator.vibrate(toastLevel==="crit"?[180,80,180]:120); }catch(_){} }
     anim = {id:s.id, from:cb.total};
@@ -711,18 +913,18 @@ document.addEventListener("submit", async e=>{
     const code=cleanCode(document.getElementById("f-code").value);
     const nm=(document.getElementById("f-myname").value||"").trim();
     const show=(text)=>{ shareMsg={text,level:"err"}; render(); const c=document.getElementById("f-code"); if(c) c.value=fmtCode(code); };
-    if(code.length!==8) return show("Der Code hat 8 Zeichen, z. B. K7MP-4QXA.");
-    if(!nm) return show("Bitte deinen Namen eingeben.");
+    if(code.length!==8) return show(T("errCodeLen"));
+    if(!nm) return show(T("errName2"));
     myName=nm; try{localStorage.setItem(LS_NAME,nm)}catch(_){}
-    if(!navigator.onLine) return show("Zum Verbinden braucht es Internet.");
-    const btn=e.target.querySelector("button[type=submit]"); btn.disabled=true; btn.textContent="Verbinde …";
+    if(!navigator.onLine) return show(T("errNetJoin"));
+    const btn=e.target.querySelector("button[type=submit]"); btn.disabled=true; btn.textContent=T("connecting");
     try{
       const ns=await Sync.join(code);
       shareUI=null; selId=ns.id; try{localStorage.setItem(LS_KEY+".sel",selId)}catch(_){}
-      tab="erfassen"; toast=`Verbunden mit System ${esc(sysFull(ns))}. Einträge werden ab jetzt abgeglichen.`; toastLevel="ok"; shareMsg={text:"",level:"ok"};
+      tab="erfassen"; toast=T("joined",esc(sysFull(ns))); toastLevel="ok"; shareMsg={text:"",level:"ok"};
       render(); window.scrollTo(0,0);
     }catch(err){
-      show(err.message==="nicht gefunden" ? "Diesen Code gibt es nicht. Prüfe die Schreibweise." : err.message==="schon" ? "Dieses System ist auf deinem Handy schon verbunden." : "Das hat nicht geklappt. Prüfe die Internetverbindung und versuche es nochmals.");
+      show(err.message==="nicht gefunden" ? T("errNoCode") : err.message==="schon" ? T("errAlready") : T("errGeneric"));
     }
     return;
   }
@@ -733,9 +935,9 @@ document.addEventListener("submit", async e=>{
     const crit = Math.round(+document.getElementById("f-crit").value);
     const start = Math.max(0, Math.round(+document.getElementById("f-start").value||0));
     const errEl = document.getElementById("sysErr");
-    if(!nr){ errEl.textContent="Bitte eine Systemnummer eingeben."; return; }
-    if(!(crit>0)){ errEl.textContent="Bitte den kritischen Bereich als Schusszahl eingeben."; return; }
-    if(systems.some(x=>x.nr===nr && x.id!==editId)){ errEl.textContent="Diese Systemnummer gibt es schon."; return; }
+    if(!nr){ errEl.textContent=T("errNr"); return; }
+    if(!(crit>0)){ errEl.textContent=T("errCrit"); return; }
+    if(systems.some(x=>x.nr===nr && x.id!==editId)){ errEl.textContent=T("errDup"); return; }
     const old = editId ? systems.find(x=>x.id===editId) : null;
     const s = old ? {...old,nr,kal,name,crit,start} : {id:uid(),nr,kal,name,crit,start,entries:[]};
     editId = undefined;
@@ -751,11 +953,11 @@ async function exportData(){
   const msg = document.getElementById("bkMsg");
   try{
     const file = new File([blob],name,{type:"application/json"});
-    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:name}); msg.textContent="Sicherung weitergegeben."; return; }
+    if(navigator.canShare && navigator.canShare({files:[file]})){ await navigator.share({files:[file],title:name}); msg.textContent=T("bkShared"); return; }
   }catch(e){ if(e && e.name==="AbortError") return; }
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click();
   setTimeout(()=>{URL.revokeObjectURL(a.href); a.remove();},1000);
-  msg.textContent="Sicherung gespeichert: "+name;
+  msg.textContent=T("bkSaved",name);
 }
 document.addEventListener("change", async e=>{
   if(e.target.id!=="importFile") return;
@@ -774,12 +976,12 @@ document.addEventListener("change", async e=>{
       systems=systems.filter(y=>y.nr!==clean.nr && y.id!==clean.id); systems.push(clean); n++;
     }
     saveLocal(); render(); Sync.start();
-    document.getElementById("bkMsg").style.color=""; document.getElementById("bkMsg").textContent=`${n} System${n===1?"":"e"} eingelesen.`;
-  }catch(err){ msg.textContent=""; const m=document.getElementById("bkMsg"); m.style.color="var(--crit)"; m.textContent="Die Datei ist keine gültige Sicherung dieser App."; }
+    document.getElementById("bkMsg").style.color=""; document.getElementById("bkMsg").textContent=T("bkRead",n);
+  }catch(err){ msg.textContent=""; const m=document.getElementById("bkMsg"); m.style.color="var(--crit)"; m.textContent=T("bkBad"); }
   e.target.value="";
 });
 
-function alertErr(){ toast=""; const v=document.getElementById("view"); const d=document.createElement("div"); d.className="err"; d.textContent="Speichern hat nicht geklappt. Prüfe die Verbindung und versuche es nochmals."; v.prepend(d); }
+function alertErr(){ toast=""; const v=document.getElementById("view"); const d=document.createElement("div"); d.className="err"; d.textContent=T("errSave"); v.prepend(d); }
 
 /* ---------- Start ---------- */
 systems = loadLocal();
