@@ -77,7 +77,10 @@ button{cursor:pointer}
 .bar .mark{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--muted);opacity:.5}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .row > *{min-width:0}
-.field{display:flex;flex-direction:column;gap:6px;flex:1 1 140px}
+.field{display:flex;flex-direction:column;gap:6px;flex:1 1 140px;min-width:0}
+input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;min-height:3.1em;text-align:left}
+input[type=date]::-webkit-date-and-time-value{text-align:left}
+#addForm input{height:58px}
 input[type=number],input[type=text],input[type=date]{width:100%;box-sizing:border-box;background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:12px;font-size:1.05rem}
 input.shots{font-family:var(--f-num);font-size:1.6rem;font-weight:700;padding:10px 12px}
 .quick{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
