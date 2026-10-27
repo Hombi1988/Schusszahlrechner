@@ -126,7 +126,6 @@ nav.tabs button[aria-current="page"]{color:var(--accent)}
 <div class="wrap">
   <header class="app">
     <div style="display:flex;flex-direction:column;gap:2px"><h1>Schusszahlrechner</h1><span class="store">By René Homberger</span></div>
-    <span class="store" id="store">Lädt …</span>
   </header>
   <main id="view"></main>
 </div>
@@ -173,10 +172,7 @@ async function removeSystem(id){
   render();
   if(mode==="db"){ await col.doc(id).delete(); } else saveLocal();
 }
-function setStore(){
-  document.getElementById("store").textContent =
-    "Auf diesem Handy gespeichert";
-}
+function setStore(){}
 
 /* ---------- Berechnung ---------- */
 function calc(s){
