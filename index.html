@@ -71,6 +71,10 @@ button{cursor:pointer}
 .counter{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .counter .big{font-family:var(--f-num);font-weight:700;font-size:2.4rem;line-height:1;font-variant-numeric:tabular-nums}
 .counter .of{color:var(--muted);font-size:.9rem}
+.counter .side{display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:10px;align-self:stretch;margin-left:auto}
+.cal{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--accent);color:var(--accent);border-radius:8px;padding:3px 10px;font-weight:700;font-size:1rem;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.cal small{font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;font-weight:600;opacity:.8}
+.stat .name .k{color:var(--accent)}
 .bar{height:10px;border-radius:5px;background:var(--track);overflow:hidden;position:relative}
 .bar i{display:block;height:100%;background:var(--ok);border-radius:5px;transition:width .3s}
 .bar i.warn{background:var(--warn)} .bar i.crit{background:var(--crit)}
@@ -231,6 +235,7 @@ function calc(s){
 }
 const LEVEL_TXT = {ok:"im grünen Bereich",warn:"bald kritisch",crit:"kritisch erreicht"};
 const sysLabel = s => s.name ? `${s.nr} · ${s.name}` : s.nr;
+const sysFull = s => [s.nr, s.kal, s.name].filter(Boolean).join(" · ");
 const sortSys = arr => [...arr].sort((a,b)=>String(a.nr).localeCompare(String(b.nr),"de",{numeric:true}));
 
 /* ---------- Ansichten ---------- */
@@ -290,7 +295,7 @@ function viewErfassen(){
   <section class="panel">
     <div class="counter">
       <div style="display:flex;flex-direction:column;gap:4px"><span class="lbl">Gesamt</span><span class="big" id="bigTotal" data-to="${c.total}">${fmt(c.total)}</span></div>
-      <div class="of">kritisch ab <span class="num">${fmt(c.crit)}</span></div>
+      <div class="side">${s.kal?`<span class="cal"><small>Kal.</small>${esc(s.kal)}</span>`:""}<div class="of">kritisch ab <span class="num">${fmt(c.crit)}</span></div></div>
     </div>
     ${bar(c)}
     <div class="hint">${c.level==="crit" ? `<b style="color:var(--crit)">Kritischer Bereich erreicht</b> (${fmt(c.over)} darüber)` : `Noch <b class="num">${fmt(c.remaining)}</b> Schuss bis zum kritischen Bereich`}</div>
@@ -317,7 +322,7 @@ function viewStatistik(){
     <h2>Restschüsse bis kritisch</h2>
     ${list.map(({s,c})=>`
     <article class="stat ${c.level}">
-      <div class="top"><span class="name">${esc(sysLabel(s))}</span><span class="pill ${c.level}">${LEVEL_TXT[c.level]}</span></div>
+      <div class="top"><span class="name">${esc(s.nr)}${s.kal?` · <span class="k">${esc(s.kal)}</span>`:""}${s.name?` · ${esc(s.name)}`:""}</span><span class="pill ${c.level}">${LEVEL_TXT[c.level]}</span></div>
       <div class="remain">${c.level==="crit"
         ? `<span class="big" style="color:var(--crit)">+${fmt(c.over)}</span><span class="hint">über dem kritischen Bereich</span>`
         : `<span class="big">${fmt(c.remaining)}</span><span class="hint">Schuss noch bis ${fmt(c.crit)}</span>`}</div>
@@ -339,11 +344,14 @@ function sysForm(){
     <h2>${s?"System bearbeiten":"Neues System"}</h2>
     <div class="row">
       <label class="field"><span class="lbl">Systemnummer</span><input type="text" id="f-nr" value="${esc(s?.nr)}" placeholder="z. B. 4711" autocomplete="off"></label>
+      <label class="field"><span class="lbl">Kaliber</span><input type="text" id="f-kal" value="${esc(s?.kal)}" placeholder="z. B. .22 lr" autocomplete="off"></label>
+    </div>
+    <div class="row">
       <label class="field"><span class="lbl">Bezeichnung (optional)</span><input type="text" id="f-name" value="${esc(s?.name)}" placeholder="z. B. Lauf 2" autocomplete="off"></label>
     </div>
     <div class="row">
-      <label class="field"><span class="lbl">Kritisch ab (Schuss)</span><input type="number" id="f-crit" inputmode="numeric" min="1" step="1" value="${s?.crit??""}" placeholder="z. B. 5000"></label>
-      <label class="field"><span class="lbl">Startstand (bisher)</span><input type="number" id="f-start" inputmode="numeric" min="0" step="1" value="${s?.start??0}"></label>
+      <label class="field"><span class="lbl">Kritisch ab Schuss</span><input type="number" id="f-crit" inputmode="numeric" min="1" step="1" value="${s?.crit??""}" placeholder="z. B. 5000"></label>
+      <label class="field"><span class="lbl">Startstand</span><input type="number" id="f-start" inputmode="numeric" min="0" step="1" value="${s?.start??0}"></label>
     </div>
     <div class="hint">Startstand: Schüsse, die das System schon hatte, bevor du hier erfasst.</div>
     <div class="err" id="sysErr"></div>
@@ -357,7 +365,7 @@ function viewSysteme(){
     ${editId!==undefined ? sysForm() : `<button class="btn" data-new>+ System erfassen</button>`}
     ${list.length ? `<div class="panel" style="gap:0;padding-block:4px">${list.map(s=>{const c=calc(s);return `
       <div class="sys"><span class="dot ${c.level}"></span>
-        <div class="meta"><b>${esc(sysLabel(s))}</b><span>kritisch ab <span class="num">${fmt(c.crit)}</span> · aktuell <span class="num">${fmt(c.total)}</span></span></div>
+        <div class="meta"><b>${esc(sysFull(s))}</b><span>kritisch ab <span class="num">${fmt(c.crit)}</span> · aktuell <span class="num">${fmt(c.total)}</span></span></div>
         <button class="x" data-edit="${s.id}" aria-label="Bearbeiten">✎</button>
         <button class="x ${armed==="s:"+s.id?"armed":""}" data-del-sys="${s.id}" aria-label="System löschen">${armed==="s:"+s.id?"Löschen?":"×"}</button>
       </div>`}).join("")}</div>` : (editId===undefined?`<div class="empty">Noch keine Systeme erfasst.</div>`:"")}
@@ -460,6 +468,7 @@ document.addEventListener("submit", async e=>{
   if(e.target.id==="sysForm"){
     const nr = document.getElementById("f-nr").value.trim();
     const name = document.getElementById("f-name").value.trim();
+    const kal = document.getElementById("f-kal").value.trim();
     const crit = Math.round(+document.getElementById("f-crit").value);
     const start = Math.max(0, Math.round(+document.getElementById("f-start").value||0));
     const errEl = document.getElementById("sysErr");
@@ -467,7 +476,7 @@ document.addEventListener("submit", async e=>{
     if(!(crit>0)){ errEl.textContent="Bitte den kritischen Bereich als Schusszahl eingeben."; return; }
     if(systems.some(x=>x.nr===nr && x.id!==editId)){ errEl.textContent="Diese Systemnummer gibt es schon."; return; }
     const old = editId ? systems.find(x=>x.id===editId) : null;
-    const s = old ? {...old,nr,name,crit,start} : {id:uid(),nr,name,crit,start,entries:[]};
+    const s = old ? {...old,nr,kal,name,crit,start} : {id:uid(),nr,kal,name,crit,start,entries:[]};
     editId = undefined;
     if(!old){ selId = s.id; try{localStorage.setItem(LS_KEY+".sel",selId)}catch(_){} }
     try{ await putSystem(s); }catch(err){ alertErr(); }
@@ -497,7 +506,7 @@ document.addEventListener("change", async e=>{
     let n=0;
     for(const x of list){
       if(!x || !x.nr || !(+x.crit>0)) continue;
-      const clean={id:String(x.id||uid()),nr:String(x.nr),name:String(x.name||""),crit:+x.crit,start:+x.start||0,
+      const clean={id:String(x.id||uid()),nr:String(x.nr),kal:String(x.kal||""),name:String(x.name||""),crit:+x.crit,start:+x.start||0,
         entries:(Array.isArray(x.entries)?x.entries:[]).filter(en=>en&&/^\d{4}-\d{2}-\d{2}$/.test(en.d)&&+en.n>0).map(en=>({id:String(en.id||uid()),d:en.d,n:Math.round(+en.n)}))};
       systems=systems.filter(y=>y.nr!==clean.nr && y.id!==clean.id); systems.push(clean); n++;
     }
